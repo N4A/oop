@@ -3,4 +3,10 @@
 
 */bin/
 */obj/
+
 *.cbp
+*.exe
+*.o
+*.obj
+*.s
+*.i
