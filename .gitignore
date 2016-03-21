@@ -10,3 +10,5 @@
 *.obj
 *.s
 *.i
+*.layout
+*.depend
