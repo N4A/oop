@@ -1,0 +1,7 @@
+commodity_name	discount
+bun	
+bread	
+bun	
+milk	0.9
+sausage	
+fruit	

@@ -1,0 +1,7 @@
+commodity_name	discount
+oden	
+bun	0.9
+sausage	0.8
+bread	
+bread	0.6
+oden	0.8

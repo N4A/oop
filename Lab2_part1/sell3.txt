@@ -1,0 +1,7 @@
+commodity_name	discount
+bread	
+yogurt	
+sausage	0.7
+bread	
+lunch	
+yogurt	0.7

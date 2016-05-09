@@ -1,0 +1,7 @@
+commodity_name	discount
+fruit	0.8
+sausage	
+lunch	0.9
+milk	0.8
+milk	
+milk	0.8
