@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
         out_file = argv[2];
         break;
     default:
-        cout << "argument error, you should enter './pre in_file [out_file]'";
+        cout << "Argument error, you should enter 'pre in_file [out_file]'";
         break;
     }
 
