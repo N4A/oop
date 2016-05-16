@@ -2,8 +2,10 @@
 #include <fstream>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 #include <stdlib.h>
 #include <map>
+#include <vector>
 
 using namespace std;
 
@@ -23,6 +25,8 @@ typedef struct ins {
     int len;
 } ins_t;
 
+typedef map<string,string>::iterator id_it;
+
 ins_t ins_table[] = {
     {"#include",include,8},
     {"#define",define,7},
@@ -34,6 +38,8 @@ ins_t ins_table[] = {
     {"#endif",endif,6}
 };
 const int ins_table_size = 8;
+const int stdlib_size = 2;
+const string stdlib[] = {"iostream","fstream"};
 
 bool print = true;//define whether to print cur line
 map<string,string> id_map;
@@ -52,7 +58,11 @@ ins_t find_ins(char* name);
 void parse_file(ifstream* in, ofstream* out);
 void parse_line(char* line, ofstream* out);
 void parse_ins(char* line, ofstream* out);
-void error_line(char* line);
+void parse_code(char* line, ofstream* out);
+void error_line(string line);
+bool is_between_quotation(size_t pos,string strl);
+bool is_stdlib(string key);
+vector<string> parse_parameter(string fun);
 
 int main(int argc, char* argv[])
 {
@@ -64,7 +74,7 @@ int main(int argc, char* argv[])
     switch (argc) {
     case 2:
         in_file = argv[1];
-        out_file = "a.cpp";
+        out_file = "pre_lab3.cpp";
         break;
     case 3:
         in_file = argv[1];
@@ -119,7 +129,7 @@ void parse_line(char* line, ofstream * out)
     }
     else {//code
         if (print)
-            *out << line << endl;
+            parse_code(line, out);
     }
 }
 
@@ -142,11 +152,16 @@ void parse_ins(char* line, ofstream * out)
                 cur++;
             }
 
+            if (is_stdlib(s)) {
+                *out << line << endl;
+                 break;
+            }
+
             //open new file
             ifstream in(s.c_str());
             if (!in) {
                 cout << "File included not found: " << s << endl;
-                //error_line(line);
+                error_line(line);
             }
             else
                 parse_file(&in, out);
@@ -158,9 +173,27 @@ void parse_ins(char* line, ofstream * out)
     }
     case define:
     {
-        char key[20];
-        char val[20];
-        sscanf(cur,"%s %s",key,val);
+        char key[128];
+        char val[128];
+        string str = string(cur);
+
+        int pos1 = str.find("(");
+        int pos2 = str.find(" ");
+        if (pos1 < pos2) {//has parameter
+            int i = 0;
+            while (true) {//skip blank
+                if (str[i] == ')')
+                    break;
+                if (str[i] == ' ') {
+                    str.replace(i,1,"");
+                    i--;
+                }
+                i++;
+            }
+        }
+
+
+        sscanf(str.c_str(),"%s %s",key,val);
         add_id(string(key),string(val));
         break;
     }
@@ -191,10 +224,15 @@ void parse_ins(char* line, ofstream * out)
             print = true;
         break;
     }
-    case ift:
+    case ift://TODO
     {
         char key[20];
         sscanf(cur,"%s",key);
+        int num = atoi(key);
+        if(num == 0)
+            print = false;
+        else
+            print = true;
         break;
     }
     case elset:
@@ -217,9 +255,97 @@ void parse_ins(char* line, ofstream * out)
     }
 }
 
-void error_line(char* line)
+void parse_code(char* line, ofstream* out)
+{
+    string strl = string(line);
+    for (id_it it = id_map.begin(); it != id_map.end(); it++) {
+        string key = it->first;
+        int pos_l = key.find("(");
+        if (pos_l == string::npos) {//normal macro
+            int pos = strl.find(key);
+            while (pos != string::npos) {
+                if (!is_between_quotation(pos,strl))
+                    strl.replace(pos,key.length(),it->second);
+                pos = strl.find(key,pos+1);
+            }
+        }
+        else {//macro with parameter
+            int pos_r = key.find(")");
+            if (pos_r == string::npos)
+                error_line(key);
+
+            string key1 = key.substr(0,pos_l);
+            int pos = strl.find(key1);
+            //parse the parameter in key
+            vector<string> key_para = parse_parameter(key);
+
+            while (pos != string::npos) {
+                if (!is_between_quotation(pos,strl)) {
+                    int pos2 = strl.find(")",pos+1);//end of macro to be replaced.
+                    int len = pos2 - pos + 1;
+                    string fun = strl.substr(pos,len);
+                    vector<string> fun_para = parse_parameter(fun);//get macro function parameter
+
+                    //get value and replace parameter
+                    string value = it->second;
+                    for (int i = 0; i < key_para.size(); i++) {
+                        int p = value.find(key_para[i]);
+                        value.replace(p,key_para[i].length(),fun_para[i]);
+                    }
+                    strl.replace(pos,len,value);
+                }
+                pos = strl.find(key1,pos+1);
+            }
+        }
+    }
+
+    *out << strl << endl;
+}
+
+bool is_between_quotation(size_t pos, string strl)
+{
+    size_t pos1 = strl.find('"');
+    while (pos1 != string::npos && pos1 < pos) {
+        size_t pos2 = strl.find('"',pos1 + 1);
+        if (pos2 > pos)
+            return true;
+        if (pos2 < strl.length()-1)
+            pos1 = strl.find('"',pos2 + 1);
+        else
+            return false;
+    }
+
+    return false;
+}
+
+vector<string> parse_parameter(string fun)
+{
+    vector<string> p;
+    int pos_s = fun.find("(") + 1;
+    int pos_e = fun.find(")");
+    int pos_n = fun.find(",", pos_s);
+    while (pos_n != string::npos) {
+        p.push_back(fun.substr(pos_s,pos_n-pos_s));
+
+        pos_s = pos_n + 1;
+        pos_n = fun.find(",",pos_s);
+    }
+    p.push_back(fun.substr(pos_s,pos_e-pos_s));//the last parameter
+
+    return p;
+}
+
+void error_line(string line)
 {
     cout << "Invalid Instruction: " << line << endl;
     exit(0);
 }
 
+bool is_stdlib(string key)
+{
+    for (int i = 0; i < stdlib_size; i++) {
+        if (key == stdlib[i])
+            return true;
+    }
+    return false;
+}

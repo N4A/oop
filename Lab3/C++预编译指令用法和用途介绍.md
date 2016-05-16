@@ -92,4 +92,5 @@
     	// 程序段2
 	#endif
 ```
-- #else和#endif不能单独使用，它们都是配合#ifdef,#ifndef或#if使用，#else表示其他情况，划分出其他情况要执行的程序段。#endif表示#if等指定的程序段到此截止。
+- #else和#endif不能单独使用，它们都是配合#ifdef,#ifndef或#if使用，#else表示其他情况，划分出
+其他情况要执行的程序段。#endif表示#if等指定的程序段到此截止。
