@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <map>
 #include <vector>
+#include "Eval.h"
 
 using namespace std;
 
@@ -62,13 +63,15 @@ void parse_code(char* line, ofstream* out);
 void error_line(string line);
 bool is_between_quotation(size_t pos,string strl);
 bool is_stdlib(string key);
+string replace_code(string code);
 vector<string> parse_parameter(string fun);
+
+Eval* eval = new Eval();//计算表达式真假
 
 int main(int argc, char* argv[])
 {
     char* in_file;
     char* out_file;
-
 
     //get in file and out file path
     switch (argc) {
@@ -228,8 +231,12 @@ void parse_ins(char* line, ofstream * out)
     {
         char key[20];
         sscanf(cur,"%s",key);
-        int num = atoi(key);
-        if(num == 0)
+
+        string val = string(key);
+
+        val = replace_code(val);
+
+        if(eval->Func(val) == false)
             print = false;
         else
             print = true;
@@ -257,12 +264,17 @@ void parse_ins(char* line, ofstream * out)
 
 void parse_code(char* line, ofstream* out)
 {
-    string strl = string(line);
+    *out << replace_code(string(line)) << endl;
+}
+
+string replace_code(string code)
+{
+    string strl = code;
     for (id_it it = id_map.begin(); it != id_map.end(); it++) {
         string key = it->first;
-        int pos_l = key.find("(");
+        size_t pos_l = key.find("(");
         if (pos_l == string::npos) {//normal macro
-            int pos = strl.find(key);
+            size_t pos = strl.find(key);
             while (pos != string::npos) {
                 if (!is_between_quotation(pos,strl))
                     strl.replace(pos,key.length(),it->second);
@@ -270,26 +282,26 @@ void parse_code(char* line, ofstream* out)
             }
         }
         else {//macro with parameter
-            int pos_r = key.find(")");
+            size_t pos_r = key.find(")");
             if (pos_r == string::npos)
                 error_line(key);
 
             string key1 = key.substr(0,pos_l);
-            int pos = strl.find(key1);
+            size_t pos = strl.find(key1);
             //parse the parameter in key
             vector<string> key_para = parse_parameter(key);
 
             while (pos != string::npos) {
                 if (!is_between_quotation(pos,strl)) {
-                    int pos2 = strl.find(")",pos+1);//end of macro to be replaced.
-                    int len = pos2 - pos + 1;
+                    size_t pos2 = strl.find(")",pos+1);//end of macro to be replaced.
+                    size_t len = pos2 - pos + 1;
                     string fun = strl.substr(pos,len);
                     vector<string> fun_para = parse_parameter(fun);//get macro function parameter
 
                     //get value and replace parameter
                     string value = it->second;
-                    for (int i = 0; i < key_para.size(); i++) {
-                        int p = value.find(key_para[i]);
+                    for (size_t i = 0; i < key_para.size(); i++) {
+                        size_t p = value.find(key_para[i]);
                         value.replace(p,key_para[i].length(),fun_para[i]);
                     }
                     strl.replace(pos,len,value);
@@ -299,7 +311,7 @@ void parse_code(char* line, ofstream* out)
         }
     }
 
-    *out << strl << endl;
+    return strl;
 }
 
 bool is_between_quotation(size_t pos, string strl)
@@ -321,9 +333,9 @@ bool is_between_quotation(size_t pos, string strl)
 vector<string> parse_parameter(string fun)
 {
     vector<string> p;
-    int pos_s = fun.find("(") + 1;
-    int pos_e = fun.find(")");
-    int pos_n = fun.find(",", pos_s);
+    size_t pos_s = fun.find("(") + 1;
+    size_t pos_e = fun.find(")");
+    size_t pos_n = fun.find(",", pos_s);
     while (pos_n != string::npos) {
         p.push_back(fun.substr(pos_s,pos_n-pos_s));
 
