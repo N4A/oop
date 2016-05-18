@@ -40,7 +40,7 @@ ins_t ins_table[] = {
 };
 const int ins_table_size = 8;
 const int stdlib_size = 2;
-const string stdlib[] = {"iostream","fstream"};
+const string stdlib[] = {"iostream","fstream","string","stdio.h","map","vector","stdlib.h"};
 
 bool print = true;//define whether to print cur line
 map<string,string> id_map;
@@ -235,6 +235,14 @@ void parse_ins(char* line, ofstream * out)
         string val = string(key);
 
         val = replace_code(val);
+
+        //È¥µô¿Õ¸ñ
+        for (int i = 0; i < val.length(); i++) {
+            if (val[i] == ' '){
+                val.replace(i,1,"");
+                i--;
+            }
+        }
 
         if(eval->Func(val) == false)
             print = false;
