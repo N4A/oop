@@ -1,15 +1,26 @@
 #include <iostream>
-#include <vector>
-
 using namespace std;
 
-int main()
-{
-    int n[][3] = {10,20,30,40,50,60};
-    int (*p)[3];
-    p = n;
+union Packed { // Declaration similar to a class
+    char i;
+    short j;
+    int k;
+    long l;
+    float f;
+    double d;
+    // The union will be the size of a
+    // double, since that's the largest element
+};  // Semicolon ends a union, like a struct
 
-    cout << *(p+1);
+int main() {
+  cout << "sizeof(Packed) = "
+       << sizeof(Packed) << endl;
+  Packed x;
+  x.i = 'c';
+  cout << x.i << endl;
+  x.d = 3.14159;
+  cout << x.d << endl;
+  cout << x.i << endl;
+} ///:~
 
-    return 0;
-}
+

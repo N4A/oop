@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 {
     char* in_file;
     char* out_file;
-
+    cout << "hello baby" << endl;
     //get in file and out file path
     switch (argc) {
     case 2:

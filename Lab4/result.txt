@@ -1,0 +1,51 @@
+test Item ==
+i1(apple,1)==i2(apple,2):0
+i1(apple,1)==i3(banana,1):0
+i1(apple,1)==i4(apple,1):1
+
+test Shelf +=
+add i1(apple)
+add i2(apple)
+add i3(banana)
+shelf1:[apple,apple,banana,]
+
+test Shelf -=
+remove i3(banana)
+shelf1:[apple,apple,]
+
+test Shelf <<
+shelf2:[]
+shelf2 << shelf1
+shelf1:[]
+shelf2:[apple,apple,]
+
+test Shop copy constructor
+shop2 = shop1
+shop1:{
+shelf1:[]
+shelf2:[apple,apple,]
+}
+shop1:{
+shelf1:[]
+shelf2:[apple,apple,]
+}
+shop2 shelf2 remove i2(apple)
+rename shop2 shelf2 item[0]
+shop2 change name to shop2
+shop1:{
+shelf1:[]
+shelf2:[apple,apple,]
+}
+shop2:{
+shelf1:[]
+shelf2:[apple_renamed,apple,]
+}
+
+Shop shop2 deleted
+Shop shop1 deleted
+Shelf shelf2 deleted
+Shelf shelf1 deleted
+Item apple deleted
+Item banana deleted
+Item apple deleted
+Item apple deleted
